@@ -1,0 +1,31 @@
+CeleraOne Application-Task for System Operations
+================================================
+
+Let's assume we have 3 centOS 6 VMs:
+Test1 - 192.168.30.1
+Test2 - 192.168.30.2
+Test3 - 192.168.30.3
+
+Using any configuration management tool (preference given to using Ansible) configure each host as the following:
+
+Host Test1:
+- Haproxy installed and running on port 80
+- Load balances requests to Test2 and Test3 port 8000
+- Failover for hosts Test2 and Test3 should be setup for port 8000 (use sensible upstream checks)
+
+Host Test2 and Host Test3:
+- Nginx is installed and running on port 8000
+- The file "/var/www/local.html" exists and contains the hostname of each machine
+- Nginx location rules as following:
+    - "/probe_local" should show the contents of /var/www/local.html
+    - "/probe_applicant" should return your availability for being 24/7 on-call at CeleraOne (shared with other team members)
+    - "/*" forwarded to your favorite website
+    - "/probe_remote" forwarded to localhost:5500
+
+In addition please make sure:
+- Production settings should be reflected in the haproxy, nginx, sysctl, etc. settings
+- Please take the number of CPUs on the local machine into account for the nginx settings
+- All hosts are reboot safe
+- Documentation is in place where applicable
+
+Please archive and send back the playbook/cookbook/manifest/configs etc. via mail.
