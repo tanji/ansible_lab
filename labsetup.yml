@@ -1,0 +1,116 @@
+---
+
+- hosts: allservers
+  sudo: yes
+  gather_facts: no
+
+  tasks:
+  - name: install epel repository
+    yum: name=epel-release state=present
+
+  - name: make sure iptables enabled and tsarted
+    service: name=iptables state=started enabled=yes
+
+- hosts: haproxy
+  sudo: yes
+  gather_facts: no
+
+  tasks:
+  - name: install haproxy
+    yum: name=haproxy state=present
+
+  - name: Get iptables rules
+    shell: iptables -L
+    register: rules
+    always_run: yes
+
+  - name: Allow port 80 in iptables
+    iptables:
+      action: insert
+      table: filter
+      chain: INPUT
+      source: 0.0.0.0/0
+      destination_port: 80
+      protocol: TCP
+      jump: ACCEPT
+      state: present
+      comment: haproxy
+    when: rules.stdout.find("haproxy") == -1
+    notify: save iptables
+    become: true
+
+  - name: start haproxy service
+    service: name=haproxy state=started enabled=yes
+
+  - name: copy haproxy.cfg
+    copy: src=/labfiles/haproxy.cfg dest=/etc/haproxy/haproxy.cfg
+    notify: restart-haproxy
+
+  handlers:
+  - name: restart-haproxy
+    service: name=haproxy state=restarted
+
+  - name: save iptables
+    command: service iptables save
+    notify: iptables-restart
+
+  - name: iptables-restart
+    service: name=iptables state=restarted
+
+- hosts: webservers
+  sudo: yes 
+  gather_facts: no
+
+  tasks:
+  - name: install nginx
+    yum: name=nginx state=present
+
+  - name: Start nginx service
+    service: name=nginx state=started enabled=yes
+
+  - name: Get iptables rules
+    shell: iptables -L
+    register: rules
+    always_run: yes
+
+  - name: Allow port 8000 in iptables
+    iptables:
+      action: insert
+      table: filter
+      chain: INPUT
+      source: 0.0.0.0/0
+      destination_port: 8000
+      protocol: TCP
+      jump: ACCEPT
+      comment: nginx
+    when: rules.stdout.find("nginx") == -1
+    notify: save iptables
+    become: true
+
+  - name: create /var/www/ folder
+    file: path=/var/www state=directory
+
+  - name: copy html files
+    copy: src={{ item.src }} dest={{ item.dest }}
+    with_items:
+    - { src: /labfiles/applicant.html , dest: /var/www/applicant.html }
+    - { src: /labfiles/nginx_celeraone.conf , dest: /etc/nginx/conf.d/celeraone.conf }
+    notify: reload-nginx
+
+  - name: create from templates
+    template: src={{ item.src }} dest={{ item.dest }}
+    with_items:
+    - { src: /labfiles/index.j2 , dest: /var/www/local.html }
+    - { src: /labfiles/remote.j2 , dest: /var/www/remote.html }
+    notify: reload-nginx
+
+  handlers:
+  - name: reload-nginx
+    service: name=nginx state=reloaded
+
+  - name: save iptables
+    command: service iptables save
+    notify: iptables-restart
+
+  - name: iptables-restart
+    service: name=iptables state=restarted
