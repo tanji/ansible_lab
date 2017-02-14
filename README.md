@@ -1,6 +1,11 @@
 # ansible_lab
 Playground for Ansible
 
+v0.2.0
+ - Changed Ansible to work with roles insted of flat playbook
+ - changed inventory "allservrs" to "common"
+ - removed unused files
+
 v0.1.0 First version:
  - Ansible with basic deployment of one HAProxy server and 2 Nginx servers
  - HAProxy loadbalance 2 Nginx servers

@@ -9,10 +9,10 @@ test1
 test2
 test3
 
-[allservers:children]
+[common:children]
 haproxy
 webservers
 
-[allservers:vars]
+[common:vars]
 ansible_ssh_user=vagrant
 ansible_ssh_pass=vagrant

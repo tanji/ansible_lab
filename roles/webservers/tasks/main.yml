@@ -1,0 +1,54 @@
+---
+
+- name: install nginx
+  yum: 
+    name: nginx
+    state: present
+
+- name: Start nginx service
+  service: 
+    name: nginx
+    state: started 
+    enabled: yes
+
+- name: Get iptables rules
+  shell: iptables -L
+  register: rules
+  always_run: yes
+
+- name: Allow port 8000 in iptables
+  iptables:
+    action: insert
+    table: filter
+    chain: INPUT
+    source: 0.0.0.0/0
+    destination_port: 8000
+    protocol: TCP
+    jump: ACCEPT
+    comment: nginx
+  when: rules.stdout.find("nginx") == -1
+  notify: save iptables
+  become: true
+
+- name: create /var/www/ folder
+  file: 
+    path: /var/www 
+    state: directory
+
+- name: copy html files
+  copy: 
+    src: "{{ item.src }}"
+    dest: "{{ item.dest }}"
+  with_items:
+  - { src: applicant.html , dest: /var/www/applicant.html }
+  - { src: nginx.conf , dest: /etc/nginx/conf.d/celeraone.conf }
+  notify: reload-nginx
+
+- name: create from templates
+  template: 
+    src: "{{ item.src }}"
+    dest: "{{ item.dest }}"
+  with_items:
+  - { src: index.j2 , dest: /var/www/local.html }
+  - { src: remote.j2 , dest: /var/www/remote.html }
+  notify: reload-nginx

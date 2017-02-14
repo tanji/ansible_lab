@@ -1,0 +1,15 @@
+---
+
+- name: reload-nginx
+  service:
+    name: nginx
+    state: reloaded
+
+- name: save iptables
+  command: service iptables save
+  notify: iptables-restart
+
+- name: iptables-restart
+  service:
+    name: iptables
+    state: restarted

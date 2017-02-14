@@ -1,0 +1,38 @@
+---
+
+- name: install haproxy
+  yum:
+    name: haproxy
+    state: present
+
+- name: Get iptables rules
+  shell: iptables -L
+  register: rules
+  always_run: yes
+
+- name: Allow port 80 in iptables
+  iptables:
+    action: insert
+    table: filter
+    chain: INPUT
+    source: 0.0.0.0/0
+    destination_port: 80
+    protocol: TCP
+    jump: ACCEPT
+    state: present
+    comment: haproxy
+  when: rules.stdout.find("haproxy") == -1
+  notify: save iptables
+  become: true
+
+- name: start haproxy service
+  service: 
+    name: haproxy
+    state: started 
+    enabled: yes
+
+- name: copy haproxy.cfg
+  copy:
+    src: haproxy.cfg 
+    dest: /etc/haproxy/haproxy.cfg
+  notify: restart-haproxy
