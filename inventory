@@ -1,6 +1,7 @@
 test1 ansible_ssh_host=192.168.30.21
 test2 ansible_ssh_host=192.168.30.22
 test3 ansible_ssh_host=192.168.30.23
+sql1 ansible_ssh_host=192.168.30.31
 
 [haproxy]
 test1
@@ -9,9 +10,13 @@ test1
 test2
 test3
 
+[mysql]
+sql1
+
 [common:children]
 haproxy
 webservers
+mysql
 
 [common:vars]
 ansible_ssh_user=vagrant

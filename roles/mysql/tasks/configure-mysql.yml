@@ -1,0 +1,19 @@
+---
+
+- name: Create a new database "lab"
+  mysql_db:
+    name: lab
+    state: present
+
+- name: add webuser user
+  mysql_user:
+    name: webuser
+    password: Aa123456
+    priv: 'lab.*:ALL'
+    state: present
+
+- name: create table users and first entry
+  mysql_db:
+    name: lab
+    state: import
+    target: create_table.sql

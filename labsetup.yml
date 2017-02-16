@@ -8,3 +8,4 @@
 
 - include: webservers.yml
 - include: haproxy.yml
+- include: mysql.yml

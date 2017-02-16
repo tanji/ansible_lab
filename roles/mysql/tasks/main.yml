@@ -1,0 +1,56 @@
+---
+
+- name: Add mysql repo
+  yum:
+    name: http://dev.mysql.com/get/mysql57-community-release-el6-7.noarch.rpm
+    state: present
+
+- name: prevent downloading latest version
+  ini_file:
+    dest: /etc/yum.repos.d/mysql-community.repo
+    section: mysql57-community
+    option: enabled
+    value: 0
+
+- name: enable downloading target version
+  ini_file:
+    dest: /etc/yum.repos.d/mysql-community.repo
+    section: mysql56-community
+    option: enabled
+    value: 1
+
+- name: install mysql
+  yum:
+    name: "{{ item }}"
+    state: present
+  with_items:
+  - mysql
+  - mysql-server
+  - MySQL-python
+
+- name: Enable and start mysql
+  service:
+    name: mysqld
+    state: started
+    enabled: yes
+
+- name: Get iptables rules
+  shell: iptables -L
+  register: rules
+  always_run: yes
+
+- name: Allow port 3306 in iptables
+  iptables:
+    action: insert
+    table: filter
+    chain: INPUT
+    source: 0.0.0.0/0
+    destination_port: 3306
+    protocol: TCP
+    jump: ACCEPT
+    comment: mysql
+  when: rules.stdout.find("mysql") == -1
+  notify: save iptables
+  become: true
+
+- include: configure-mysql.yml
