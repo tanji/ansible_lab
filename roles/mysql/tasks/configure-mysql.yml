@@ -12,8 +12,15 @@
     priv: 'lab.*:ALL'
     state: present
 
+- name: copy sql script
+  copy:
+    src: "{{ item.src }}"
+    dest: "{{ item.dest }}"
+  with_items:
+  - { src: create_table.sql , dest: /var/tmp/create_table.sql }
+
 - name: create table users and first entry
   mysql_db:
     name: lab
     state: import
-    target: create_table.sql
+    target: /var/tmp/create_table.sql
