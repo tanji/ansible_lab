@@ -1,6 +1,10 @@
 # ansible_lab
 Playground for Ansible
 
+v0.3.1
+ - Fixed mysql deploypent
+ - Separated changelog from readme.md
+
 v0.3.0
  - Added mysql role (Currently without connection to nginx)
    - install mysql

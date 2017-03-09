@@ -5,6 +5,15 @@
     name: nginx
     state: present
 
+- name: install php
+  yum:
+    name: "{{ item }}"
+    state: present
+  with_items:
+  - php
+  - php-fpm
+  - php-mysql
+
 - name: Start nginx service
   service: 
     name: nginx
@@ -42,6 +51,7 @@
   with_items:
   - { src: applicant.html , dest: /var/www/applicant.html }
   - { src: nginx.conf , dest: /etc/nginx/conf.d/celeraone.conf }
+  - { src: phpinfo.php , dest: /var/www/phpinfo.php }
   notify: reload-nginx
 
 - name: create from templates
@@ -52,3 +62,13 @@
   - { src: index.j2 , dest: /var/www/local.html }
   - { src: remote.j2 , dest: /var/www/remote.html }
   notify: reload-nginx
+
+- name: ensure php5-fpm cgi.fix_pathinfo=0
+  lineinfile: 
+    dest: /etc/php.ini 
+    regexp: '^(.*)cgi.fix_pathinfo=' 
+    line: cgi.fix_pathinfo=0
+  notify:
+    - restart-php-fpm
+    - reload-nginx
+
